@@ -25,3 +25,72 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+## 1. Create Add Module Federation plugin & Configure remote entry in webpack.config.js
+
+```
+
+webpack.config.js
+
+new ModuleFederationPlugin({
+      library: { type: "module" },
+
+      // For hosts (please adjust)
+      remotes: {
+        "mfe2": "http://localhost:4201/remoteEntry.js",
+      },
+
+      shared: share({
+        "@angular/core": {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: "auto",
+        },
+        "@angular/common": {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: "auto",
+        },
+        "@angular/common/http": {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: "auto",
+        },
+        "@angular/router": {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: "auto",
+        },
+
+        ...sharedMappings.getDescriptors(),
+      }),
+    })
+
+```
+
+## 2. Add decl.d.ts
+
+```
+declare module 'mfe2/todo.module';
+```
+
+## 3. Import Module and Expose it via app_routes
+
+```
+import { Routes } from "@angular/router";
+import { HomeComponent } from "./home/home.component";
+
+export const APP_ROUTES: Routes = [
+  {
+    path: '',
+    component: HomeComponent,
+    pathMatch: 'full',
+  },
+  {
+    path: 'todo',
+    loadChildren: () => import('mfe2/todo.module').then((m)=> m.TodoModule),
+
+  },
+
+];
+```
